@@ -73,7 +73,6 @@ export const server = Bun.serve<Context>({
         }
       }
       if (data.type === 'player-disconnected') {
-        players.delete(data.playerId)
         ws.publish(
           gameId,
           JSON.stringify({
@@ -81,6 +80,7 @@ export const server = Bun.serve<Context>({
             playerId: data.playerId
           })
         )
+        players.delete(data.playerId)
       }
       ws.publish(gameId, message)
     },

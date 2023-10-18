@@ -34,7 +34,9 @@ export default function GameContainer() {
 
       if (data.type === "on-join") {
         data.state.players.forEach((p: any) => {
-          if (p.playerId === playerId) return;
+          if (p.playerId === playerId) {
+            return;
+          }
           const _player = new Player();
           _player.position(p.x, p.y);
           _player.movement = p.movement;
@@ -45,7 +47,11 @@ export default function GameContainer() {
       }
 
       if (data.type === "player-joined") {
-        if (players.has(data.playerId)) return;
+        if (players.has(data.playerId)) {
+          const _player = players.get(data.playerId);
+          _player.position(0, 0);
+          return;
+        }
         const _player = new Player();
         _player.position(data.state.x, data.state.y);
         _player.color = data.state.color;
@@ -56,7 +62,9 @@ export default function GameContainer() {
       }
 
       if (data.type === "player-update") {
-        if (data.playerId === playerId) return;
+        if (data.playerId === playerId) {
+          return;
+        }
         if (players.has(data.playerId)) {
           const _player = players.get(data.playerId);
           _player.movement = data.state.movement;

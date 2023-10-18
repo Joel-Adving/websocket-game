@@ -7,7 +7,7 @@ COPY bun.lockb .
 
 RUN bun install
 
-COPY src src
+COPY server.ts server.ts
 COPY tsconfig.json .
 
 ENV NODE_ENV production
