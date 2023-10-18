@@ -8,7 +8,7 @@ export class Renderer {
   #deltaTime: number;
   #running: boolean;
   #objects: Map<string, Entity>;
-  #animations: Function[];
+  #animations: Map<string, (deltaTime: number, currentTime: number) => void>;
 
   constructor() {
     const canvas = this.newCanvas();
@@ -20,7 +20,11 @@ export class Renderer {
     this.#deltaTime = 0;
     this.#running = false;
     this.#objects = new Map();
-    this.#animations = [];
+    this.#animations = new Map();
+  }
+
+  get animations() {
+    return this.#animations;
   }
 
   newCanvas() {
@@ -29,8 +33,8 @@ export class Renderer {
     canvas.style.width = "100%";
 
     function setSize() {
-      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+      canvas.height = canvas.offsetHeight;
+      canvas.width = canvas.offsetWidth;
     }
 
     setTimeout(setSize); // hack for initial size
@@ -42,8 +46,27 @@ export class Renderer {
     this.#objects.set(entity.id, entity);
   }
 
-  animate(fn: (deltaTime: number, currentTime: number) => void) {
-    this.#animations.push(fn);
+  remove(entity: Entity | string) {
+    if (typeof entity === "object") {
+      this.#objects.delete(entity.id);
+    }
+    if (typeof entity === "string") {
+      this.#objects.delete(entity);
+    }
+  }
+
+  animate(fn: (deltaTime: number, currentTime: number) => void, name?: string) {
+    this.#animations.set(name ?? fn.name, fn);
+  }
+
+  removeAnimation(
+    animation: string | ((deltaTime: number, currentTime: number) => void),
+  ) {
+    if (typeof animation === "function") {
+      this.#animations.delete(animation.name);
+    } else if (typeof animation === "string") {
+      this.#animations.delete(animation);
+    }
   }
 
   #frame(currentTime: number) {

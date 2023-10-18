@@ -13,7 +13,7 @@ export class Player extends Entity {
   movement: Movement;
   movementSpeed: number;
 
-  constructor({ color = "black", scale = 10 } = {}) {
+  constructor({ color = "black", scale = 1 } = {}) {
     super();
     this.color = color;
     this.scale = scale;
@@ -35,7 +35,7 @@ export class Player extends Entity {
     );
   }
 
-  aniamte(delta: number) {
+  animate(delta: number) {
     if (this.movement.up) {
       this.y -= this.movementSpeed * delta;
     }
