@@ -23,12 +23,23 @@ export class Renderer {
     this.#loopFunctions = new Map();
   }
 
-  get objects() {
-    return this.#objects;
+  newCanvas() {
+    const canvas = document.createElement("canvas");
+    canvas.style.height = "100%";
+    canvas.style.width = "100%";
+
+    function setSize() {
+      canvas.height = canvas.offsetHeight;
+      canvas.width = canvas.offsetWidth;
+    }
+
+    setTimeout(setSize); // hack for initial size
+    window.addEventListener("resize", setSize);
+    return canvas;
   }
 
-  get loopFunctions() {
-    return this.#loopFunctions;
+  get objects() {
+    return this.#objects;
   }
 
   addObject(entity: Entity) {
@@ -44,19 +55,8 @@ export class Renderer {
     }
   }
 
-  newCanvas() {
-    const canvas = document.createElement("canvas");
-    canvas.style.height = "100%";
-    canvas.style.width = "100%";
-
-    function setSize() {
-      canvas.height = canvas.offsetHeight;
-      canvas.width = canvas.offsetWidth;
-    }
-
-    setTimeout(setSize); // hack for initial size
-    window.addEventListener("resize", setSize);
-    return canvas;
+  get loopFunctions() {
+    return this.#loopFunctions;
   }
 
   addToLoop(

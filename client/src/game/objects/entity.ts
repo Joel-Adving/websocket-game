@@ -24,7 +24,20 @@ export class Entity {
 
   draw(ctx: CanvasRenderingContext2D) {
     ctx.fillStyle = this.color;
-    const s = 25 * this.scale;
-    ctx.fillRect(this.x, this.y, s, s);
+    const size = 25 * this.scale;
+
+    if (this.x < 0) {
+      this.x = 0;
+    } else if (this.x > window.innerWidth - size) {
+      this.x = window.innerWidth - size;
+    }
+
+    if (this.y < 0) {
+      this.y = 0;
+    } else if (this.y > window.innerHeight - size) {
+      this.y = window.innerHeight - size;
+    }
+
+    ctx.fillRect(this.x, this.y, size, size);
   }
 }
