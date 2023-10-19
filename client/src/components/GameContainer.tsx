@@ -4,9 +4,12 @@ import { Player } from "../game/objects";
 
 const WS_URL = import.meta.env.PUBLIC_WS_URL;
 const PLACEHOLDER_GAME_ID = 1; // TODO: create lobby for creaing and joining games
+const SERVER_UPDATE_RATE = 1000 / 60; // send 60 updates per second to server
+const SYNC_RATE = 1000 * 5; // sync x,y player coords every 5 seconds
 
 export default function GameContainer() {
   let container: HTMLDivElement | undefined = undefined;
+  let syncPosition = 0;
 
   onMount(async () => {
     const playerId = localStorage.getItem("playerId") ?? crypto.randomUUID();
@@ -75,6 +78,10 @@ export default function GameContainer() {
         }
         if (players.has(data.playerId)) {
           const _player = players.get(data.playerId);
+          if (syncPosition < Date.now() - SYNC_RATE) {
+            _player.position(data.state.x, data.state.y);
+            syncPosition = Date.now();
+          }
           _player.movement = data.state.movement;
         } else {
           const _player = new Player();
@@ -102,8 +109,7 @@ export default function GameContainer() {
     function updatePlayer() {
       if (player.isMoving()) {
         const now = Date.now();
-        if (now - lastUpdate > 1000 / 30) {
-          // sends update to server 30 times per second
+        if (now - lastUpdate > SERVER_UPDATE_RATE) {
           lastUpdate = now;
           socket.send(
             JSON.stringify({ type: "player-update", state: player, playerId }),
