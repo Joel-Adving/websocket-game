@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from "uuid";
+
 export class Entity {
   #id: string;
   x: number;
@@ -8,7 +10,7 @@ export class Entity {
   scale: number;
 
   constructor() {
-    this.#id = crypto.randomUUID();
+    this.#id = uuidv4();
     this.color = "black";
     this.scale = 3;
     this.width = 25;

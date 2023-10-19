@@ -3,6 +3,8 @@ import { Renderer } from "../game/renderer";
 import { Player } from "../game/objects";
 import "toolcool-color-picker";
 import ColorPicker from "toolcool-color-picker";
+import { v4 as uuidv4 } from "uuid";
+import { getPlayerId } from "../game/utils";
 
 const WS_URL = import.meta.env.PUBLIC_WS_URL;
 const PLACEHOLDER_GAME_ID = 1; // TODO: create lobby for creaing and joining games
@@ -26,10 +28,7 @@ export default function GameContainer() {
   let inputElementRef: HTMLInputElement | undefined = undefined;
 
   onMount(async () => {
-    playerId = localStorage.getItem("playerId") ?? crypto.randomUUID();
-    localStorage.setItem("playerId", playerId);
-    document.cookie = `playerId=${playerId}; SameSite=None; Secure; Expires=Fri, 31 Dec 9999 23:59:59 GMT;`;
-
+    playerId = getPlayerId();
     socket = new WebSocket(`${WS_URL}/game/${PLACEHOLDER_GAME_ID}`);
     socket.onerror = () => console.log("ws connection error");
     socket.onclose = () => console.log("ws connection closed");
@@ -46,7 +45,6 @@ export default function GameContainer() {
 
     const renderer = new Renderer();
     container!.appendChild(renderer.canvas);
-
     players = new Map();
     player = new Player();
     player.color = INITIAL_COLOR;
