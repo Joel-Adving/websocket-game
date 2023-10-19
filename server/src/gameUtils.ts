@@ -5,7 +5,9 @@ export function createNewPlayer(playerId: string) {
     y: 200,
     color: 'black',
     scale: 3,
+    activeMessage: '',
     movementSpeed: 10,
+    isTyping: false,
     movement: {
       up: false,
       down: false,

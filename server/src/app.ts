@@ -65,6 +65,8 @@ new Elysia()
             player.color = data.state.color
             player.movement = data.state.movement
             player.movementSpeed = data.state.movementSpeed
+            player.activeMessage = data.state.activeMessage
+            player.isTyping = data.state.isTyping
           }
         }
 

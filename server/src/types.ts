@@ -9,6 +9,8 @@ export type Player = {
   y: number
   color: string
   scale: number
+  activeMessage: string
+  isTyping: boolean
   movementSpeed: number
   movement: {
     up: boolean
