@@ -1,3 +1,4 @@
+import { animateText } from "../utils";
 import { Entity } from "./entity";
 
 type Movement = {
@@ -10,10 +11,16 @@ type Movement = {
 export class Player extends Entity {
   movement: Movement;
   movementSpeed: number;
+  activeMessage: string;
+  messages: string[];
+  isTyping: boolean;
 
   constructor() {
     super();
+    this.messages = [];
     this.movementSpeed = 10;
+    this.activeMessage = "";
+    this.isTyping = false;
     this.movement = {
       up: false,
       down: false,
@@ -31,7 +38,16 @@ export class Player extends Entity {
     );
   }
 
+  stopMovement() {
+    this.movement.up = false;
+    this.movement.down = false;
+    this.movement.left = false;
+    this.movement.right = false;
+  }
+
   animate(delta: number) {
+    if (this.isTyping) return;
+
     if (this.movement.up) {
       this.y -= this.movementSpeed * delta;
     }
@@ -48,6 +64,8 @@ export class Player extends Entity {
 
   controls() {
     window.addEventListener("keydown", (e) => {
+      if (this.isTyping) return;
+
       if (e.key === "ArrowLeft" || e.key === "a") {
         this.movement.left = true;
       }
@@ -63,6 +81,8 @@ export class Player extends Entity {
     });
 
     window.addEventListener("keyup", (e) => {
+      if (this.isTyping) return;
+
       if (e.key === "ArrowLeft" || e.key === "a") {
         this.movement.left = false;
       }
@@ -86,6 +106,8 @@ export class Player extends Entity {
       color: string;
       movement: Movement;
       movementSpeed: number;
+      activeMessage: string;
+      isTyping: boolean;
     },
     { withPosition = true } = {},
   ) {
@@ -93,8 +115,32 @@ export class Player extends Entity {
     this.color = data.color;
     this.movement = data.movement;
     this.movementSpeed = data.movementSpeed;
+    this.activeMessage = data.activeMessage;
+    this.isTyping = data.isTyping;
     if (withPosition) {
       this.position(data.x, data.y);
     }
+  }
+
+  draw(ctx: CanvasRenderingContext2D) {
+    const width = this.width * this.scale;
+    const height = this.height * this.scale;
+
+    // Keeps the object in the viewport bounds
+    if (this.x < 0) {
+      this.x = 0;
+    } else if (this.x > window.innerWidth - width) {
+      this.x = window.innerWidth - width;
+    }
+    if (this.y < 0) {
+      this.y = 0;
+    } else if (this.y > window.innerHeight - height) {
+      this.y = window.innerHeight - height;
+    }
+
+    animateText(ctx, this);
+
+    ctx.fillStyle = this.color;
+    ctx.fillRect(this.x, this.y, width, height);
   }
 }

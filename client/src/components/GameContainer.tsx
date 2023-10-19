@@ -21,6 +21,9 @@ export default function GameContainer() {
 
   const [scale, setScale] = createSignal(INITIAL_SCALE);
   const [movementSpeed, setMovementSpeed] = createSignal(10);
+  const [messageInput, setMessageInput] = createSignal("");
+
+  let inputElementRef: HTMLInputElement | undefined = undefined;
 
   onMount(async () => {
     playerId = localStorage.getItem("playerId") ?? crypto.randomUUID();
@@ -145,6 +148,21 @@ export default function GameContainer() {
         JSON.stringify({ type: "player-update", state: player, playerId }),
       );
     });
+
+    inputElementRef!.addEventListener("focus", () => {
+      player.stopMovement();
+      player.isTyping = true;
+      socket.send(
+        JSON.stringify({ type: "player-update", state: player, playerId }),
+      );
+    });
+
+    inputElementRef!.addEventListener("blur", () => {
+      player.isTyping = false;
+      socket.send(
+        JSON.stringify({ type: "player-update", state: player, playerId }),
+      );
+    });
   });
 
   function handleScaleChange(
@@ -175,6 +193,23 @@ export default function GameContainer() {
     );
   }
 
+  function handleSendMessage(e: Event) {
+    e.preventDefault();
+    const message = messageInput();
+    if (!message) return;
+    player.activeMessage = message;
+    socket.send(
+      JSON.stringify({
+        type: "message",
+        state: message,
+        playerId,
+      }),
+    );
+    player.isTyping = false;
+    setMessageInput("");
+    inputElementRef!.blur();
+  }
+
   return (
     <div class="relative h-screen w-screen">
       <div ref={container} class="absolute inset-0"></div>
@@ -189,7 +224,7 @@ export default function GameContainer() {
           button-padding="3px"
         />
 
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center gap-2">
           <label for="scale">Scale</label>
           <input
             id="scale"
@@ -201,7 +236,7 @@ export default function GameContainer() {
           />
         </div>
 
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center gap-2">
           <label for="movement-speed">Movement Speed</label>
           <input
             id="movement-speed"
@@ -213,6 +248,22 @@ export default function GameContainer() {
           />
         </div>
       </div>
+
+      <form
+        onSubmit={handleSendMessage}
+        class="absolute flex gap-3 bottom-5 left-5"
+      >
+        <input
+          ref={inputElementRef}
+          id="message"
+          class="rounded border-2 p-2 bg-transparent"
+          value={messageInput()}
+          onChange={(e) => setMessageInput(e.currentTarget.value)}
+        />
+        <button type="submit" class="rounded border-2 p-2 px-4 text-gray-500">
+          Send
+        </button>
+      </form>
     </div>
   );
 }
