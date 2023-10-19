@@ -12,11 +12,13 @@ export const server = Bun.serve<Context>({
     const url = new URL(req.url)
     const ip = server.requestIP(req)
     if (url.pathname === '/ws') {
-      const playerId = getCookieByName(req.headers.get('Cookie') ?? '', 'playerId') ?? crypto.randomUUID()
+      const playerId = getCookieByName(req.headers.get('cookie') ?? '', 'playerId') ?? crypto.randomUUID()
       server.upgrade(req, {
         data: { playerId, ip },
         headers: {
-          'Set-Cookie': `playerId=${playerId}; Max-Age=${60 * 60 * 24 * 365}`
+          'Set-Cookie': `playerId=${playerId}; Max-Age=${60 * 60 * 24 * 365}`,
+          'Access-Control-Allow-Origin': 'localhost:3000 localhost:4321 ws-game.oki.gg game.oki.gg',
+          'Access-Control-Allow-Methods': 'GET'
         }
       })
       return

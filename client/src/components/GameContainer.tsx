@@ -2,11 +2,13 @@ import { onCleanup, onMount } from "solid-js";
 import { Renderer } from "../game/renderer";
 import { Player } from "../game/objects";
 
+const WS_URL = import.meta.env.PUBLIC_WS_URL;
+
 export default function GameContainer() {
   let container: HTMLDivElement | undefined = undefined;
 
   onMount(async () => {
-    const socket = new WebSocket(`ws://localhost:3000/ws`);
+    const socket = new WebSocket(WS_URL);
     socket.onclose = () => console.log("ws connection closed");
     await new Promise((reslove) => (socket.onopen = reslove));
 
