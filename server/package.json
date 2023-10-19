@@ -3,10 +3,14 @@
   "version": "1.0.50",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "bun run --watch server.ts"
+    "dev": "bun run --watch src/app.ts"
+  },
+  "dependencies": {
+    "@elysiajs/cors": "^0.7.1",
+    "elysia": "latest"
   },
   "devDependencies": {
     "bun-types": "latest"
   },
-  "module": "server.js"
+  "module": "server.ts"
 }

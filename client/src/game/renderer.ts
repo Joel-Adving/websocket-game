@@ -23,30 +23,19 @@ export class Renderer {
     this.#animations = new Map();
   }
 
+  get objects() {
+    return this.#objects;
+  }
+
   get animations() {
     return this.#animations;
   }
 
-  newCanvas() {
-    const canvas = document.createElement("canvas");
-    canvas.style.height = "100%";
-    canvas.style.width = "100%";
-
-    function setSize() {
-      canvas.height = canvas.offsetHeight;
-      canvas.width = canvas.offsetWidth;
-    }
-
-    setTimeout(setSize); // hack for initial size
-    window.addEventListener("resize", setSize);
-    return canvas;
-  }
-
-  add(entity: Entity) {
+  addObject(entity: Entity) {
     this.#objects.set(entity.id, entity);
   }
 
-  remove(entity: Entity | string) {
+  removeObject(entity: Entity | string) {
     if (typeof entity === "object") {
       this.#objects.delete(entity.id);
     }
@@ -67,6 +56,21 @@ export class Renderer {
     } else if (typeof animation === "string") {
       this.#animations.delete(animation);
     }
+  }
+
+  newCanvas() {
+    const canvas = document.createElement("canvas");
+    canvas.style.height = "100%";
+    canvas.style.width = "100%";
+
+    function setSize() {
+      canvas.height = canvas.offsetHeight;
+      canvas.width = canvas.offsetWidth;
+    }
+
+    setTimeout(setSize); // hack for initial size
+    window.addEventListener("resize", setSize);
+    return canvas;
   }
 
   #frame(currentTime: number) {

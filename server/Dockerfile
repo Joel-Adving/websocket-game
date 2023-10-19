@@ -7,11 +7,11 @@ COPY bun.lockb .
 
 RUN bun install
 
-COPY server.ts server.ts
+COPY src src
 COPY tsconfig.json .
 
 ENV NODE_ENV production
 
-CMD ["bun", "server.ts"]
+CMD ["bun", "src/app.ts"]
 
 EXPOSE 3000

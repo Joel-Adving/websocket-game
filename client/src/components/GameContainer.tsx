@@ -1,25 +1,31 @@
-import { onCleanup, onMount } from "solid-js";
+import { onMount } from "solid-js";
 import { Renderer } from "../game/renderer";
 import { Player } from "../game/objects";
 
 const WS_URL = import.meta.env.PUBLIC_WS_URL;
+const PLACEHOLDER_GAME_ID = 1; // TODO: create lobby for creaing and joining games
 
 export default function GameContainer() {
   let container: HTMLDivElement | undefined = undefined;
 
   onMount(async () => {
-    const socket = new WebSocket(WS_URL);
+    const playerId = localStorage.getItem("playerId") ?? crypto.randomUUID();
+    localStorage.setItem("playerId", playerId);
+    document.cookie = `playerId=${playerId}; SameSite=None; Secure; Expires=Fri, 31 Dec 9999 23:59:59 GMT;`;
+
+    const socket = new WebSocket(`${WS_URL}/game/${PLACEHOLDER_GAME_ID}`);
+
+    socket.onerror = () => console.log("ws connection error");
     socket.onclose = () => console.log("ws connection closed");
-    await new Promise((reslove) => (socket.onopen = reslove));
-
-    const playerId = getCookieByName(document.cookie, "playerId");
-
     window.onbeforeunload = () => {
       if (socket.readyState == WebSocket.OPEN) {
         socket.send(JSON.stringify({ type: "player-disconnected", playerId }));
         socket.close(1000, "connection closed");
       }
     };
+    await new Promise(
+      (reslove) => (socket.onopen = () => reslove(console.log("ws connected"))),
+    );
 
     const renderer = new Renderer();
     container!.appendChild(renderer.canvas);
@@ -28,7 +34,7 @@ export default function GameContainer() {
     const player = new Player();
     player.controls();
     players.set(playerId, player);
-    renderer.add(player);
+    renderer.addObject(player);
     renderer.animate(player.animate.bind(player), player.id);
 
     socket.onmessage = (e) => {
@@ -42,8 +48,8 @@ export default function GameContainer() {
           const _player = new Player();
           _player.position(p.x, p.y);
           _player.movement = p.movement;
-          players.set(data.playerId, _player);
-          renderer.add(_player);
+          players.set(p.playerId, _player);
+          renderer.addObject(_player);
           renderer.animate(_player.animate.bind(_player), _player.id);
         });
       }
@@ -59,7 +65,7 @@ export default function GameContainer() {
         _player.color = data.state.color;
         _player.movement = data.state.movement;
         players.set(data.playerId, _player);
-        renderer.add(_player);
+        renderer.addObject(_player);
         renderer.animate(_player.animate.bind(_player), _player.id);
       }
 
@@ -75,7 +81,7 @@ export default function GameContainer() {
           _player.position(data.state.x, data.state.y);
           _player.movement = data.state.movement;
           players.set(data.playerId, _player);
-          renderer.add(_player);
+          renderer.addObject(_player);
           renderer.animate(_player.animate.bind(_player), _player.id);
         }
       }
@@ -84,7 +90,7 @@ export default function GameContainer() {
         if (players.has(data.playerId)) {
           const _player = players.get(data.playerId);
           renderer.removeAnimation(_player.id);
-          renderer.remove(_player);
+          renderer.removeObject(_player);
           players.delete(data.playerId);
         }
       }
@@ -97,6 +103,7 @@ export default function GameContainer() {
       if (player.isMoving()) {
         const now = Date.now();
         if (now - lastUpdate > 1000 / 30) {
+          // sends update to server 30 times per second
           lastUpdate = now;
           socket.send(
             JSON.stringify({ type: "player-update", state: player, playerId }),
@@ -113,17 +120,7 @@ export default function GameContainer() {
 
     renderer.animate(updatePlayer, "update-player");
     renderer.start();
-
-    onCleanup(() => {
-      renderer.removeAnimation("update-player");
-    });
   });
 
   return <div ref={container} class="h-screen w-screen"></div>;
-}
-
-function getCookieByName(cookie: string, name: string) {
-  const value = `; ${cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop()?.split(";").shift();
 }
