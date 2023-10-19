@@ -59,11 +59,12 @@ new Elysia()
         if (data.type === 'player-update') {
           const player = game.players.get(data.playerId)
           if (player) {
-            player.movement = data.state.movement
-            player.scale = data.state.scale
-            player.color = data.state.color
             player.x = data.state.x
             player.y = data.state.y
+            player.scale = data.state.scale
+            player.color = data.state.color
+            player.movement = data.state.movement
+            player.movementSpeed = data.state.movementSpeed
           }
         }
 

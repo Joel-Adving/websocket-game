@@ -80,17 +80,19 @@ export class Player extends Entity {
 
   update(
     data: {
-      movement: Movement;
-      scale: number;
-      color: string;
       x: number;
       y: number;
+      scale: number;
+      color: string;
+      movement: Movement;
+      movementSpeed: number;
     },
     { withPosition = true } = {},
   ) {
-    this.movement = data.movement;
     this.scale = data.scale;
     this.color = data.color;
+    this.movement = data.movement;
+    this.movementSpeed = data.movementSpeed;
     if (withPosition) {
       this.position(data.x, data.y);
     }

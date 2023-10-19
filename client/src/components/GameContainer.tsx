@@ -20,6 +20,7 @@ export default function GameContainer() {
   let lastSync = 0;
 
   const [scale, setScale] = createSignal(INITIAL_SCALE);
+  const [movementSpeed, setMovementSpeed] = createSignal(10);
 
   onMount(async () => {
     playerId = localStorage.getItem("playerId") ?? crypto.randomUUID();
@@ -132,6 +133,7 @@ export default function GameContainer() {
     }
 
     renderer.addToLoop(updatePlayer, "update-player");
+
     renderer.startLoop();
   });
 
@@ -146,12 +148,24 @@ export default function GameContainer() {
   });
 
   function handleScaleChange(
-    e: InputEvent & {
-      currentTarget: HTMLInputElement;
-    },
+    e: InputEvent & { currentTarget: HTMLInputElement },
   ) {
     setScale(e.currentTarget.valueAsNumber);
     player.scale = e.currentTarget.valueAsNumber;
+    socket.send(
+      JSON.stringify({
+        type: "player-update",
+        state: player,
+        playerId,
+      }),
+    );
+  }
+
+  function handleMovementSpeedChange(
+    e: InputEvent & { currentTarget: HTMLInputElement },
+  ) {
+    setMovementSpeed(e.currentTarget.valueAsNumber);
+    player.movementSpeed = e.currentTarget.valueAsNumber;
     socket.send(
       JSON.stringify({
         type: "player-update",
@@ -184,6 +198,18 @@ export default function GameContainer() {
             max="10"
             value={scale()}
             onInput={handleScaleChange}
+          />
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <label for="movement-speed">Movement Speed</label>
+          <input
+            id="movement-speed"
+            type="range"
+            min="1"
+            max="30"
+            value={movementSpeed()}
+            onInput={handleMovementSpeedChange}
           />
         </div>
       </div>
