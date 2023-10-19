@@ -1,10 +1,10 @@
 export function createNewPlayer(playerId: string) {
   return {
     playerId,
-    x: 0,
-    y: 0,
+    x: 200,
+    y: 200,
     color: 'black',
-    scale: 1,
+    scale: 3,
     movementSpeed: 10,
     movement: {
       up: false,

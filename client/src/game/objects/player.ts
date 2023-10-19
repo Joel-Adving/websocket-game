@@ -8,15 +8,11 @@ type Movement = {
 };
 
 export class Player extends Entity {
-  color: string;
-  scale: number;
   movement: Movement;
   movementSpeed: number;
 
-  constructor({ color = "black", scale = 1 } = {}) {
+  constructor() {
     super();
-    this.color = color;
-    this.scale = scale;
     this.movementSpeed = 10;
     this.movement = {
       up: false,
@@ -82,8 +78,21 @@ export class Player extends Entity {
     });
   }
 
-  draw(ctx: CanvasRenderingContext2D) {
-    ctx.fillStyle = this.color;
-    ctx.fillRect(this.x, this.y, 50, 50);
+  update(
+    data: {
+      movement: Movement;
+      scale: number;
+      color: string;
+      x: number;
+      y: number;
+    },
+    { withPosition = true } = {},
+  ) {
+    this.movement = data.movement;
+    this.scale = data.scale;
+    this.color = data.color;
+    if (withPosition) {
+      this.position(data.x, data.y);
+    }
   }
 }

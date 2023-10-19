@@ -6,9 +6,9 @@ export class Renderer {
   speedConstant: number;
   #previousTime: number;
   #deltaTime: number;
-  #running: boolean;
+  #started: boolean;
   #objects: Map<string, Entity>;
-  #animations: Map<string, (deltaTime: number, currentTime: number) => void>;
+  #loopFunctions: Map<string, (deltaTime: number, currentTime: number) => void>;
 
   constructor() {
     const canvas = this.newCanvas();
@@ -18,17 +18,17 @@ export class Renderer {
     this.speedConstant = 60;
     this.#previousTime = 0;
     this.#deltaTime = 0;
-    this.#running = false;
+    this.#started = false;
     this.#objects = new Map();
-    this.#animations = new Map();
+    this.#loopFunctions = new Map();
   }
 
   get objects() {
     return this.#objects;
   }
 
-  get animations() {
-    return this.#animations;
+  get loopFunctions() {
+    return this.#loopFunctions;
   }
 
   addObject(entity: Entity) {
@@ -41,20 +41,6 @@ export class Renderer {
     }
     if (typeof entity === "string") {
       this.#objects.delete(entity);
-    }
-  }
-
-  animate(fn: (deltaTime: number, currentTime: number) => void, name?: string) {
-    this.#animations.set(name ?? fn.name, fn);
-  }
-
-  removeAnimation(
-    animation: string | ((deltaTime: number, currentTime: number) => void),
-  ) {
-    if (typeof animation === "function") {
-      this.#animations.delete(animation.name);
-    } else if (typeof animation === "string") {
-      this.#animations.delete(animation);
     }
   }
 
@@ -73,19 +59,36 @@ export class Renderer {
     return canvas;
   }
 
+  addToLoop(
+    fn: (deltaTime: number, currentTime: number) => void,
+    name?: string,
+  ) {
+    this.#loopFunctions.set(name ?? fn.name, fn);
+  }
+
+  removeFromLoop(
+    animation: string | ((deltaTime: number, currentTime: number) => void),
+  ) {
+    if (typeof animation === "function") {
+      this.#loopFunctions.delete(animation.name);
+    } else if (typeof animation === "string") {
+      this.#loopFunctions.delete(animation);
+    }
+  }
+
   #frame(currentTime: number) {
     currentTime *= 0.001;
     this.#deltaTime = this.speedConstant * (currentTime - this.#previousTime);
     this.#previousTime = currentTime;
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.#animations.forEach((fn) => fn(this.#deltaTime, currentTime));
+    this.#loopFunctions.forEach((fn) => fn(this.#deltaTime, currentTime));
     this.#objects.forEach((obj) => obj.draw(this.ctx));
     requestAnimationFrame(this.#frame.bind(this));
   }
 
-  start() {
-    if (!this.#running) {
-      this.#running = true;
+  startLoop() {
+    if (!this.#started) {
+      this.#started = true;
       requestAnimationFrame(this.#frame.bind(this));
     }
   }
