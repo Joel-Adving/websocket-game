@@ -15,8 +15,8 @@ export class Player extends Entity {
   messages: string[];
   isTyping: boolean;
 
-  constructor() {
-    super();
+  constructor(id?: string) {
+    super(id);
     this.messages = [];
     this.movementSpeed = 10;
     this.activeMessage = "";

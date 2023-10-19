@@ -13,10 +13,9 @@ games.set('1', {
 
 new Elysia()
   .use(cors({ origin }))
-  .get('/', () => 'Hello and welcome to the most epic web socket game')
   .ws('/ws/game/:id', {
     open(ws) {
-      const playerId = ws.data.cookie.playerId.get()
+      const playerId = ws.data.query.playerId as string
       if (!playerId) {
         ws.close()
         return
@@ -35,11 +34,6 @@ new Elysia()
       }
 
       ws.subscribe(gameId)
-      ws.publish(gameId, {
-        type: 'player-joined',
-        playerId,
-        state: game.players.get(playerId)
-      })
       ws.send({
         type: 'on-join',
         playerId,
@@ -47,8 +41,11 @@ new Elysia()
           players: Array.from(game.players.values()).filter((p) => p.playerId !== playerId)
         }
       })
-
-      console.log(games)
+      ws.publish(gameId, {
+        type: 'player-joined',
+        playerId,
+        state: game.players.get(playerId)
+      })
     },
 
     message(ws, message) {
@@ -84,12 +81,12 @@ new Elysia()
 
     close(ws, code, message) {
       const { id: gameId } = ws.data.params as { id: string }
-      const userId = ws.data.cookie.playerId.get()
-      console.log('connection closed', { code, message, gameId, userId })
+      const playerId = ws.data.query.playerId as string
+      console.log('connection closed', { code, message, gameId, playerId })
       const game = games.get(gameId)
       if (game) {
-        if (game.players.has(userId)) {
-          game.players.delete(userId)
+        if (game.players.has(playerId)) {
+          game.players.delete(playerId)
         }
       }
       ws.unsubscribe(gameId)

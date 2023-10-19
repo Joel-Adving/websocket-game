@@ -23,14 +23,11 @@ export function animateText(ctx: CanvasRenderingContext2D, player: Player) {
 }
 
 export function getPlayerId() {
-  let playerId;
   const storedPlayerId = localStorage.getItem("playerId");
-  if (storedPlayerId?.length === 36) {
-    playerId = storedPlayerId;
-  } else {
-    playerId = uuidv4();
+  if (storedPlayerId) {
+    return storedPlayerId;
   }
+  const playerId = uuidv4();
   localStorage.setItem("playerId", playerId);
-  document.cookie = `playerId=${playerId}; SameSite=None; Secure; Expires=Fri, 31 Dec 9999 23:59:59 GMT;`;
   return playerId;
 }

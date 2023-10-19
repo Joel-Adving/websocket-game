@@ -29,7 +29,12 @@ export default function GameContainer() {
 
   onMount(async () => {
     playerId = getPlayerId();
-    socket = new WebSocket(`${WS_URL}/game/${PLACEHOLDER_GAME_ID}`);
+    socket = new WebSocket(
+      `${WS_URL}/game/${PLACEHOLDER_GAME_ID}?playerId=${playerId}`,
+    );
+    await new Promise(
+      (reslove) => (socket.onopen = () => reslove(console.log("ws connected"))),
+    );
     socket.onerror = () => console.log("ws connection error");
     socket.onclose = () => console.log("ws connection closed");
     window.onbeforeunload = () => {
@@ -39,19 +44,15 @@ export default function GameContainer() {
       }
     };
 
-    await new Promise(
-      (reslove) => (socket.onopen = () => reslove(console.log("ws connected"))),
-    );
-
     const renderer = new Renderer();
     container!.appendChild(renderer.canvas);
     players = new Map();
-    player = new Player();
+    player = new Player(playerId);
     player.color = INITIAL_COLOR;
     player.controls();
     players.set(playerId, player);
     renderer.addObject(player);
-    renderer.addToLoop(player.animate.bind(player), player.id);
+    renderer.addToLoop(player.animate.bind(player), playerId);
 
     socket.onmessage = (e) => {
       const data = JSON.parse(e.data);
@@ -61,7 +62,7 @@ export default function GameContainer() {
           if (p.playerId === playerId) {
             return;
           }
-          const newPlayer = new Player();
+          const newPlayer = new Player(p.playerId);
           newPlayer.update(p);
           players.set(p.playerId, newPlayer);
           renderer.addObject(newPlayer);
@@ -70,14 +71,9 @@ export default function GameContainer() {
       }
 
       if (data.type === "player-joined") {
-        const foundPlayer = players.get(data.playerId);
-        if (foundPlayer) {
-          foundPlayer.position(200, 200);
-          return;
-        }
-        const newPlayer = new Player();
+        const newPlayer = new Player(data.playerId);
         newPlayer.update(data.state);
-        players.set(data.playerId, newPlayer);
+        players.set(newPlayer.id, newPlayer);
         renderer.addObject(newPlayer);
         renderer.addToLoop(newPlayer.animate.bind(newPlayer), newPlayer.id);
       }
@@ -93,20 +89,14 @@ export default function GameContainer() {
             lastSync = Date.now();
           }
           foundPlayer.update(data.state, { withPosition: false });
-        } else {
-          const newPlayer = new Player();
-          newPlayer.update(data.state);
-          players.set(data.playerId, newPlayer);
-          renderer.addObject(newPlayer);
-          renderer.addToLoop(newPlayer.animate.bind(newPlayer), newPlayer.id);
         }
       }
 
       if (data.type === "player-disconnected") {
         const foundPlayer = players.get(data.playerId);
         if (foundPlayer) {
-          renderer.removeFromLoop(foundPlayer.id);
-          renderer.removeObject(foundPlayer);
+          renderer.removeFromLoop(data.playerId);
+          renderer.removeObject(data.playerId);
           players.delete(data.playerId);
         }
       }
@@ -134,7 +124,6 @@ export default function GameContainer() {
     }
 
     renderer.addToLoop(updatePlayer, "update-player");
-
     renderer.startLoop();
   });
 

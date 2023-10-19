@@ -9,8 +9,8 @@ export class Entity {
   color: string;
   scale: number;
 
-  constructor() {
-    this.#id = uuidv4();
+  constructor(id?: string) {
+    this.#id = id || uuidv4();
     this.color = "black";
     this.scale = 3;
     this.width = 25;
