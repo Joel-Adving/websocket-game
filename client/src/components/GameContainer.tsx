@@ -4,12 +4,12 @@ import { Player } from "../game/objects";
 
 const WS_URL = import.meta.env.PUBLIC_WS_URL;
 const PLACEHOLDER_GAME_ID = 1; // TODO: create lobby for creaing and joining games
-const SERVER_UPDATE_RATE = 1000 / 60; // send 60 updates per second to server
-const SYNC_RATE = 1000 * 5; // sync x,y player coords every 5 seconds
+const UPDATE_RATE = 1000 / 60; // send 60 updates per second to server
+const SYNC_RATE = 1000 * 5; // sync x, y player coords every 5 seconds
 
 export default function GameContainer() {
   let container: HTMLDivElement | undefined = undefined;
-  let syncPosition = 0;
+  let lastSync = 0;
 
   onMount(async () => {
     const playerId = localStorage.getItem("playerId") ?? crypto.randomUUID();
@@ -48,28 +48,28 @@ export default function GameContainer() {
           if (p.playerId === playerId) {
             return;
           }
-          const _player = new Player();
-          _player.position(p.x, p.y);
-          _player.movement = p.movement;
-          players.set(p.playerId, _player);
-          renderer.addObject(_player);
-          renderer.animate(_player.animate.bind(_player), _player.id);
+          const newPlayer = new Player();
+          newPlayer.position(p.x, p.y);
+          newPlayer.movement = p.movement;
+          players.set(p.playerId, newPlayer);
+          renderer.addObject(newPlayer);
+          renderer.animate(newPlayer.animate.bind(newPlayer), newPlayer.id);
         });
       }
 
       if (data.type === "player-joined") {
         if (players.has(data.playerId)) {
-          const _player = players.get(data.playerId);
-          _player.position(0, 0);
+          const foundPlayer = players.get(data.playerId);
+          foundPlayer.position(0, 0);
           return;
         }
-        const _player = new Player();
-        _player.position(data.state.x, data.state.y);
-        _player.color = data.state.color;
-        _player.movement = data.state.movement;
-        players.set(data.playerId, _player);
-        renderer.addObject(_player);
-        renderer.animate(_player.animate.bind(_player), _player.id);
+        const newPlayer = new Player();
+        newPlayer.position(data.state.x, data.state.y);
+        newPlayer.color = data.state.color;
+        newPlayer.movement = data.state.movement;
+        players.set(data.playerId, newPlayer);
+        renderer.addObject(newPlayer);
+        renderer.animate(newPlayer.animate.bind(newPlayer), newPlayer.id);
       }
 
       if (data.type === "player-update") {
@@ -77,27 +77,27 @@ export default function GameContainer() {
           return;
         }
         if (players.has(data.playerId)) {
-          const _player = players.get(data.playerId);
-          if (syncPosition < Date.now() - SYNC_RATE) {
-            _player.position(data.state.x, data.state.y);
-            syncPosition = Date.now();
+          const foundPlayer = players.get(data.playerId);
+          if (lastSync < Date.now() - SYNC_RATE) {
+            foundPlayer.position(data.state.x, data.state.y);
+            lastSync = Date.now();
           }
-          _player.movement = data.state.movement;
+          foundPlayer.movement = data.state.movement;
         } else {
-          const _player = new Player();
-          _player.position(data.state.x, data.state.y);
-          _player.movement = data.state.movement;
-          players.set(data.playerId, _player);
-          renderer.addObject(_player);
-          renderer.animate(_player.animate.bind(_player), _player.id);
+          const newPlayer = new Player();
+          newPlayer.position(data.state.x, data.state.y);
+          newPlayer.movement = data.state.movement;
+          players.set(data.playerId, newPlayer);
+          renderer.addObject(newPlayer);
+          renderer.animate(newPlayer.animate.bind(newPlayer), newPlayer.id);
         }
       }
 
       if (data.type === "player-disconnected") {
         if (players.has(data.playerId)) {
-          const _player = players.get(data.playerId);
-          renderer.removeAnimation(_player.id);
-          renderer.removeObject(_player);
+          const foundPlayer = players.get(data.playerId);
+          renderer.removeAnimation(foundPlayer.id);
+          renderer.removeObject(foundPlayer);
           players.delete(data.playerId);
         }
       }
@@ -109,7 +109,7 @@ export default function GameContainer() {
     function updatePlayer() {
       if (player.isMoving()) {
         const now = Date.now();
-        if (now - lastUpdate > SERVER_UPDATE_RATE) {
+        if (now - lastUpdate > UPDATE_RATE) {
           lastUpdate = now;
           socket.send(
             JSON.stringify({ type: "player-update", state: player, playerId }),

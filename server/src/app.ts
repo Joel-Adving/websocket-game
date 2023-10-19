@@ -1,6 +1,7 @@
 import cors from '@elysiajs/cors'
 import Elysia from 'elysia'
 import { Game, Player } from './types'
+import { createNewPlayer } from './gameUtils'
 
 const origin = ['localhost:3000', 'localhost:4321', 'ws-game.oki.gg', 'game.oki.gg']
 
@@ -23,22 +24,10 @@ new Elysia()
       const game = games.get(gameId)
 
       if (game) {
-        const player = game.players.get(playerId)
-        if (!player) {
-          game.players.set(playerId, {
-            playerId,
-            x: 0,
-            y: 0,
-            color: 'black',
-            scale: 1,
-            movementSpeed: 10,
-            movement: {
-              up: false,
-              down: false,
-              left: false,
-              right: false
-            }
-          })
+        const foundPlayer = game.players.get(playerId)
+        if (!foundPlayer) {
+          const newPlayer = createNewPlayer(playerId)
+          game.players.set(playerId, newPlayer)
         }
 
         ws.subscribe(gameId)
@@ -56,6 +45,8 @@ new Elysia()
             players: Array.from(game.players.values()).filter((p) => p.playerId !== playerId)
           }
         })
+
+        console.log(games)
       }
     },
 
